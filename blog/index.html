@@ -1,10 +1,36 @@
-<!DOCTYPE HTML>
-<html lang="en">
-<head>
-	<meta charset="UTF-8">
-	<title>Aben's Code Life</title>
-</head>
-<body>
-	<h1>这是我的 Blog 页面，内容分为三类：HTML、CSS 和 JavaScirp!</h1>	
-</body>
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="content-type" content="text/html; charset=utf-8" /> 
+        <title>Hello World</title>
+        <meta id="viewport" name="viewport" 
+            content="width=device-width; initial-scale=1.0; maximum-scale=1.0; user-scalable=0;" /> 
+        <link rel="stylesheet" href="style.css" /> 
+        <link rel="apple-touch-icon" href="images/apple-touch-icon.png" /> 
+        <script type="text/javascript" charset="utf-8"> 
+            window.onload = function() {
+                var header = document.getElementById('header').getElementsByTagName('h1')[0],
+                    old = document.getElementById('content').getElementsByTagName('h1')[0];
+                if (old) header.innerHTML = old.innerHTML;
+                setTimeout(function(){
+                    window.scrollTo(0, 1);
+                }, 100);
+            }
+        </script> 
+    </head>
+    <body>
+        <div id="header">
+            <h1>Hello World</h1>
+            <a href="index.html" id="backButton">Index</a> 
+        </div>
+        <div id="content">
+<p>
+<strong>Hello World</strong>
+</p>
+        </div>
+        <div id="footer">
+            Powered by <a href="http://vimwiki.googlecode.com/">Vimwiki</a>,
+            %time_stamp%.
+        </div>
+    </body>
 </html>

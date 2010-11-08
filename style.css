@@ -1,0 +1,41 @@
+body{
+	background:#f2f2ea;
+}
+.content{
+	width:300px;
+	margin:0 auto;
+	padding:0 10px 10px;
+	background:#fff;
+	border:1px solid #f1f1f1;
+}
+	.content h1{
+		margin:0;
+		padding:15px 20px;
+		background:url(images/bookmark.png) no-repeat;
+		font-size:14px;
+	}
+	.content h2{
+		height:26px;
+		border-bottom:1px solid #668800;
+	}
+		.content h2 span{
+			color:#fff;
+			font-size:14px;
+			font-family: 'MuseoCustom','Century Gothic',Arial,Helvetica,sans-serif;
+			font-weight:normal;
+			background:#668800;
+			padding:0.1em 0.3em;
+		}
+	.content em{
+		display:block;
+		clear:left;
+		margin:10px 0 0 0;
+	}
+	.content a{
+		color:#668800;
+		text-decoration:none;
+		padding:0.1em 0.4em;
+	}
+	.content a:hover{
+		background:#dadad3;
+	}
