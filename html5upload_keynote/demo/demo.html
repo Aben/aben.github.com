@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=1024" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <title>Photo upload demo</title>
+    
+    <meta name="description" content="html 5 upload" />
+    <meta name="author" content="Aben" />
+    <link href="http://fonts.googleapis.com/css?family=Open+Sans:regular,semibold,italic,italicsemibold|PT+Sans:400,700,400italic,700italic|PT+Serif:400,700,400italic,700italic" rel="stylesheet" />
+    <style>
+        body{
+            padding:2em;line-height:1.8em;
+            background:#f7f7f7;color:#333;
+            font-family:'Bitstream Vera Sans Mono','Courier',monospace;
+        }
+        .active-drop-target {
+            -webkit-animation-name: pulse;
+            -webkit-animation-duration: 0.7s;
+            -webkit-animation-iteration-count: infinite;
+            -webkit-animation-direction: alternate;
+            -webkit-animation-timing-function: in-and-out;
+            background: #6af;
+        }
+        .hide{display:none;}
+        #view{
+            min-height:30em;overflow:hidden;
+        }
+        #view .list{
+            float:left;width:320px;margin-right:20px;
+            font-size:13px;
+        }
+        #view .list ul{
+            margin:0;padding:0;
+            list-style:none;
+        }
+        .img{
+            height:180px;width:240px;
+            padding:1px; border:1px solid #ccc;
+            text-align:center;
+        }
+        .progress{
+            position:relative;float:left;width:240px;padding:1px;margin:5px 0 0;
+            border:1px solid #ccc;
+        }
+        .animate{
+            height:18px;width:0%;
+            background:#EBB843;
+        }
+        .uploading .animate{
+            background:#19C73C;
+        }
+        .progress-label{
+            position:absolute;top:-3px;left:3px;
+            font-size:12px;
+        }
+        .progress .num{
+            position:absolute;top:-3px;right:5px;
+            color: #56a0ee;
+        }
+        code{
+            font-family:'Bitstream Vera Sans Mono','Courier',monospace;
+            font-size:12px;
+            background-color: #F8F8F8;
+            border: 1px solid #CCCCCC;
+            border-radius: 3px 3px 3px 3px;
+            overflow: auto;
+            padding:6px 10px;
+        }
+        #binary{float:right;margin-top:70px;}
+        .source{display:block;height:200px;width:500px;overflow:auto;}
+    </style>
+</head>
+<body>
+    <h1>Project:Photo upload</h1>
+    
+    <form id="photo" method="post">
+        <div id="view">
+            <!--<div class="hide" id="binary"/>-->
+                <!--<button type="button" start="0" end="5">0-5</button>-->
+                <!--<button type="button" start="5" end="10">5-10</button>-->
+                <!--<button type="button" start="10" end="100">10-100</button>-->
+                <!--<button type="button">full</button>-->
+                <!--<code class="source"></code>-->
+            <!--</div>-->
+        </div>
+        <button type="button" id="read">read</button>
+        <input type="submit" value="upload">
+    </form>
+    <script src="http://tv.sohu.com/upload/jq_plugin/j.js"></script>
+    <script>
+    var _e = function(){};
+    if( typeof console != 'undefined' ){
+        _e = function(){
+            var date = new Date()
+                ,now = [ date.toLocaleTimeString(), '.', date.getMilliseconds(), ' -> ' ].join('');
+            if( arguments.length === 1 && typeof arguments[0] !== 'object' ){
+                console.log( '%c%d%o', 'font-style:italic;font-size:10px;', now, arguments[0] );
+            }else{
+                console.info( '%c%d%o', 'font-style:italic;font-size:10px;', now, arguments );
+            }
+        };
+    }
+    (function(){
+        var addEvent = function (t, e, c) {
+            if (t.addEventListener) {
+                t.addEventListener(e, c, false);
+            } else if (t.attachEvent) {
+                t.attachEvent('on' + e, c);
+            } else {
+                t['on' + e] = c;
+            }
+        };
+        var stopEvent = function(ev){
+            ev.stopPropagation();
+            ev.preventDefault();
+        };
+        if (window.File && window.FileReader && window.FileList) {
+            var fileQueue = [];
+            var addFile = function(files){
+                var html = [];
+                for (var i=0; i<files.length; ++i){
+                    html.push('<div class="list"><ul>'
+                        ,'<li>filename: <em>',files[i].name,'</em></li>'
+                        ,'<li>type: <em>',files[i].type,'</em></li>'
+                        ,'<li>size: <em>',files[i].size,'</em></li>'
+                        ,'<li class="img">缩略图</li>'
+                        ,'</ul>'
+                        ,'<div class="progress reading">'
+                        ,'<div class="animate" style="width:0%"></div>'
+                        ,'<span class="progress-label">reading</span>'
+                        ,'<em class="num"></em>'
+                        ,'</div>'
+                        ,'<div class="progress uploading">'
+                        ,'<div class="animate" style="width:0%"></div>'
+                        ,'<span class="progress-label">uploading</span>'
+                        ,'<em class="num"></em>'
+                        ,'</div></div>');
+                    //read(files[i]);
+                    fileQueue.push(files[i]);
+                }
+                $('#view').append(html.join(''));
+                if(files.length=1){
+                    $('#binary').removeClass('hide')
+                        .find('button').click(function(ev){
+                            var file = files[0];
+                            var start = parseInt($(ev.target).attr('start')) || 0;
+                            var end = parseInt($(ev.target).attr('end')) || (file.size - 1);
+                            var blob;
+                            var reader = new FileReader();
+
+                            reader.onloadend = function(ev) {
+                                if (ev.target.readyState == FileReader.DONE) { // DONE == 2
+                                    $('.source').html( ev.target.result );
+                                }
+                            };
+
+                            if (file.slice){
+                                blob = file.slice( start, end );
+                            }else if(file.webkitSlice){
+                                blob = file.webkitSlice( start, end );
+                            }else if(file.mozSlice){
+                                blob = file.mozSlice( start, end );
+                            }else{
+                                blob = file;
+                                end = file.size-1;
+                            }
+                            reader.readAsBinaryString(blob);
+                        });
+                }
+            };
+            var read = function(file,i){
+                var fr = new FileReader;
+                var el = $('.list').eq(i);
+                addEvent(fr, 'progress', function(ev){
+                    var percent = Math.round( ev.loaded / ev.total * 100 );
+                    el.find('.reading .animate').animate({ width:percent + '%' }, 300);
+                    el.find('.reading .num').text( percent + '%' );
+                });
+                addEvent(fr, 'load', function(ev){
+                    var img = ['<img src="',fr.result,'" width="240" height="180" alt="',file.name,'" />'];
+                    el.find('.img').html(img.join(''));
+                    window.tmp = fr.result;
+                });
+                // on error flash red?
+                addEvent(fr, 'abort', function(ev){
+                    console.log('The file read was aborted...');
+                });
+                addEvent(fr, 'error', function(ev){
+                    console.log('There was an error reading the file...');
+                });
+                fr.readAsDataURL(file);
+            };
+
+            var dropzone = document.body;
+            addEvent(dropzone, 'dragenter', function(ev){
+                stopEvent(ev);
+                ev.target.className = 'active-drop-target';
+            });
+            addEvent(dropzone, 'dragover', function(ev){
+                stopEvent(ev);
+            });
+            addEvent(dropzone, 'dragleave', function(ev){
+                stopEvent(ev);
+                ev.target.className = '';
+            });
+            addEvent(dropzone, 'drop', function(ev){
+                stopEvent(ev);
+                ev.target.className = '';
+
+                var files = ev.dataTransfer.files; // FileList object.
+                if (files)
+                    addFile(files);
+            });
+            addEvent(document.getElementById('read'), 'click', function(ev){
+                for(var i=0; i<fileQueue.length; ++i){
+                    read(fileQueue[i],i);
+                }
+            });
+            addEvent(document.getElementById('photo'), 'submit', function(ev){
+                stopEvent(ev);
+                var push = function(file, i){
+                    var xhr = new XMLHttpRequest()
+                        ,upload = xhr.upload
+                        ,fd = new FormData();
+
+                    fd.append('upload', file);
+
+                    var el = $('.list').eq(i);
+                    addEvent(upload,'progress', function (ev) {
+                        if (ev.lengthComputable) {
+                            var percent = Math.round( ev.loaded / ev.total * 100 );
+                            el.find('.uploading .animate').animate({ width:percent + '%' }, 300);
+                            el.find('.uploading .num').text( percent + '%' );
+                        }
+                    }, false);
+
+                    addEvent(upload,'load', function (ev) {
+                        var data = eval("(" + ev.target.responseText + ")");
+                        if( data ){
+                            _e('uploading success!');
+                            el.find('.uploading .num').css('color', '#fff');
+                        }
+                    }, false);
+
+                    addEvent(upload, 'error', function (ev) { 
+                        _e('post data error, try again. log: ',ev);
+                    }, false);
+
+                    <!--xhr.open('POST', 'http://aben.com:8080/upload', true );-->
+                    xhr.open('POST', 'http://127.0.0.1:8080/upload', true );
+                    //xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+                    //xhr.withCredentials = true;
+                    xhr.send(fd);
+                }
+                for(var i=0; i<fileQueue.length; ++i){
+                    push(fileQueue[i],i);
+                }
+
+            });
+        }
+
+    })();
+    </script>
+</body>
+</html>
